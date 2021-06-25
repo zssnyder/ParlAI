@@ -57,7 +57,7 @@ class ModelImageChatWorld(BaseModelChatWorld):
 
 Be sure to talk about this image a little bit before discussing other things!
 """,
-            'task_data': {'image_src': self.image_src},
+            'task_data': {**self.task_data, 'image_src': self.image_src},
             'agent_idx': system_agent_idx,
         }
         self.agent.observe(validate(image_act_for_human))
@@ -75,6 +75,7 @@ Be sure to talk about this image a little bit before discussing other things!
 
         # Have the bot respond
         bot_first_act_raw = self.bot.act()
+        bot_first_act_raw['task_data'] = self.task_data
         bot_first_act_raw = Message(
             Compatibility.maybe_fix_act(bot_first_act_raw)
         ).json_safe_payload()

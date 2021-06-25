@@ -188,6 +188,11 @@ class BaseModelChatWorld(CrowdTaskWorld, ABC):
         self.acceptability_checker = AcceptabilityChecker()
         self.block_qualification = opt['block_qualification']
 
+        # Names of agents to show to the human in the UI
+        self.task_data = {
+            'currentAgentNames': {self.agent.id: 'YOU', self.bot.id: 'YOUR PARTNER'}
+        }
+
         # below are timeout protocols
         self.max_resp_time = max_resp_time  # in secs
         print(
@@ -315,7 +320,8 @@ class BaseModelChatWorld(CrowdTaskWorld, ABC):
                 self._postprocess_acts(acts=acts, agent_idx=idx)
                 for other_agent in [self.agent, self.bot]:
                     if other_agent != agent:
-                        other_agent.observe(validate(acts[idx]))
+                        act = {**acts[idx], 'task_data': self.task_data}
+                        other_agent.observe(validate(act))
 
                 print(
                     f'[agent {idx}] self.task_turn_idx: {self.task_turn_idx}, self.dialog is: {self.dialog}'
@@ -461,6 +467,7 @@ class ModelChatWorld(BaseModelChatWorld):
                 'episode_done': False,
                 'id': self.agent.id,
                 'text': self.context_info['person1_seed_utterance'],
+                'task_data': self.task_data,
                 'fake_start': True,
                 'agent_idx': 0,
             }
@@ -470,6 +477,7 @@ class ModelChatWorld(BaseModelChatWorld):
                 'episode_done': False,
                 'id': self.bot.id,
                 'text': self.context_info['person2_seed_utterance'],
+                'task_data': self.task_data,
                 'fake_start': True,
                 'agent_idx': 1,
             }
@@ -488,6 +496,7 @@ class ModelChatWorld(BaseModelChatWorld):
                 'episode_done': False,
                 'id': self.agent.id,
                 'text': 'Hi!',
+                'task_data': self.task_data,
                 'fake_start': True,
                 'agent_idx': 0,
             }
@@ -499,6 +508,7 @@ class ModelChatWorld(BaseModelChatWorld):
             self.bot.observe(validate(human_first_msg))
 
             first_bot_act = self.bot.act()
+            first_bot_act['task_data'] = self.task_data
             first_bot_act = Compatibility.maybe_fix_act(first_bot_act)
 
             self.agent.observe(validate(first_bot_act))
